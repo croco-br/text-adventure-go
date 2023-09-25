@@ -12,8 +12,8 @@ var directions = []string{
 }
 
 var places = []string{
-	"Grand Hall", "Courtyard", "Bedroom", "Conference Room",
-	"Dinning Room", "Kitchen", "Cellar", "Outside",
+	"a Grand Hall", "inside the Courtyard", "in a Bedroom", "inside a Conference Room",
+	"inside a Dinning Room", "near the Kitchen", "inside a Cellar", "Outside",
 }
 
 type Room struct {
@@ -52,11 +52,13 @@ func (c *Course) GetRooms() []*Room {
 		room := &Room{
 			Id:          i,
 			Name:        getRandomPlace(),
-			Description: "You are in " + getRandomPlace() + ".",
+			Description: "You are " + getRandomPlace() + ".",
 			Exits:       make(map[string]*Room),
 		}
 
-		if i > 0 {
+		if i == 0 {
+			room.Exits[getRandomExit()] = room
+		} else {
 			room.Exits[getRandomExit()] = rooms[i-1]
 		}
 
