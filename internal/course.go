@@ -1,5 +1,3 @@
-// course.go
-
 package internal
 
 import (
@@ -14,13 +12,6 @@ var directions = []string{
 var places = []string{
 	"a Grand Hall", "inside the Courtyard", "in a Bedroom", "inside a Conference Room",
 	"inside a Dinning Room", "near the Kitchen", "inside a Cellar", "Outside",
-}
-
-type Room struct {
-	Id          int
-	Name        string
-	Description string
-	Exits       map[string]*Room
 }
 
 type Course struct {
@@ -44,6 +35,10 @@ func getRandomExit() string {
 	return directions[randomIndex]
 }
 
+func getRandomBool() bool {
+	return rand.Intn(2) == 0
+}
+
 func (c *Course) GetRooms() []*Room {
 	rooms := []*Room{}
 
@@ -53,6 +48,7 @@ func (c *Course) GetRooms() []*Room {
 			Id:          i,
 			Name:        getRandomPlace(),
 			Description: "You are " + getRandomPlace() + ".",
+			HasEnemies:  getRandomBool(),
 			Exits:       make(map[string]*Room),
 		}
 

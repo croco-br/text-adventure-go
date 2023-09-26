@@ -3,64 +3,65 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
-	"strings"
 	"text-adventure/internal"
 
 	figure "github.com/common-nighthawk/go-figure"
 )
 
-// ProcessInput processes player input.
-func ProcessInput() string {
-	var input string
-	fmt.Print("\n> ")
-	fmt.Scanln(&input)
-	return strings.ToLower(input)
-}
-
-// ClearScreen clears the terminal screen.
-func ClearScreen() {
-	cmd := exec.Command("clear") // for Unix-like systems
-	cmd.Stdout = os.Stdout
-	cmd.Run()
-}
-
 func main() {
 	start()
-	state := initState()
-	loop(state)
+	state := internal.NewState()
+	state.Init()
+	loop(*state)
 }
 
 func loop(state internal.State) {
 	for {
+		internal.Important(state.CurrentRoom.Description)
 
-		fmt.Printf("\n%s's Health: %d\n", state.Player.Name, state.Player.Health)
-		fmt.Println(state.Player.CurrentRoom.Description)
-		fmt.Println("Exits:")
-		for exit, room := range state.Player.CurrentRoom.Exits {
-			fmt.Printf("- %s to %s\n", exit, room.Name)
+		if state.CurrentRoom.HasEnemies {
+			internal.Error("This room has enemies!")
+			fmt.Printf("\n%s's Health: %d\n", state.Player.Name, state.Player.Health)
+			fmt.Println("What will you do? (move/attack/room)")
+
+		} else {
+			internal.Important("What will you do? (move/room)")
 		}
-		fmt.Println("What will you do? (move/quit)")
 
-		input := ProcessInput()
+		input := internal.ProcessInput()
 
 		switch input {
+		case "r":
+		case "room":
+			internal.ClearScreen()
+			internal.Important(state.CurrentRoom.Description)
+			internal.Info("This room has the following exits:")
+			for exit, room := range state.CurrentRoom.Exits {
+				fmt.Printf("- %s to %s\n", exit, room.Name)
+			}
+		case "a":
+		case "atk":
 		case "attack":
 			handleAttack(state.Player, state.Enemy)
+		case "m":
 		case "move":
-			fmt.Print("Where do you want to go? ")
-			dest := ProcessInput()
-			if room, ok := state.Player.CurrentRoom.Exits[dest]; ok {
-				state.Player.CurrentRoom = room
-				ClearScreen()
+		case "mv":
+			internal.Important("Where do you want to go? ")
+			direction := internal.ProcessInput()
+
+			if _, ok := state.CurrentRoom.Exits[direction]; ok {
+				internal.Success("Moving rooms...")
+				state.MoveRooms(state.Player)
+
 			} else {
-				fmt.Println("That's not a valid direction.")
+
+				internal.Error("That's not a valid direction.")
 			}
 		case "quit":
-			fmt.Println("Thanks for playing!")
+			internal.Success("Thanks for playing!")
 			os.Exit(0)
 		default:
-			fmt.Println("Invalid command. Try again.")
+			internal.Error("Invalid command. Try again.")
 		}
 	}
 }
@@ -81,32 +82,9 @@ func handleAttack(player internal.Player, enemy internal.Enemy) {
 	}
 }
 
-func initState() internal.State {
-	c := internal.NewCourse(10)
-	p := internal.Player{
-		Name:    "Player",
-		Health:  100,
-		Attack:  10,
-		Defense: 5,
-	}
-
-	e := internal.Enemy{
-		Name:    "Goblin",
-		Health:  80,
-		Attack:  5,
-		Defense: 5,
-	}
-
-	rooms := c.GetRooms()
-	p.CurrentRoom = rooms[0]
-	state := internal.NewState(p, e)
-
-	return *state
-}
-
 func start() {
-	ClearScreen()
+	internal.ClearScreen()
 	logo := figure.NewFigure(internal.GAME_NAME, "", true)
 	fmt.Println(logo.String())
-	fmt.Println("Welcome to " + internal.GAME_NAME + ". A text-based RPG.")
+	//fmt.Println("Welcome to " + internal.GAME_NAME + ". A text-based RPG.")
 }
