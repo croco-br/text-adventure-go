@@ -1,10 +1,11 @@
 package internal
 
 type State struct {
-	Player      Player
-	Enemy       Enemy
-	CurrentRoom *Room
-	Rooms       []*Room
+	Player       Player
+	Enemy        Enemy
+	CurrentRoom  *Room
+	Rooms        []*Room
+	ClearedRooms int
 }
 
 func NewState() *State {
@@ -39,5 +40,6 @@ func (s *State) Init() State {
 func (s *State) MoveRooms(player Player) *State {
 	oldRoom := s.CurrentRoom
 	s.CurrentRoom = s.Rooms[oldRoom.Id+1]
+	s.ClearedRooms++
 	return s
 }

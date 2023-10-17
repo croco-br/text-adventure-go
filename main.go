@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"text-adventure/internal"
+	"time"
 
 	figure "github.com/common-nighthawk/go-figure"
 )
@@ -17,28 +19,14 @@ func main() {
 
 func loop(state internal.State) {
 	for {
-		internal.Important(state.CurrentRoom.Description)
-
-		if state.CurrentRoom.HasEnemies {
-			internal.Error("This room has enemies!")
-			fmt.Printf("\n%s's Health: %d\n", state.Player.Name, state.Player.Health)
-			fmt.Println("What will you do? (move/attack/room)")
-
-		} else {
-			internal.Important("What will you do? (move/room)")
-		}
-
-		input := internal.ProcessInput()
-
+		input := handleDecision(state)
 		switch input {
+		case "s":
+		case "state":
+			handleState(state)
 		case "r":
 		case "room":
-			internal.ClearScreen()
-			internal.Important(state.CurrentRoom.Description)
-			internal.Info("This room has the following exits:")
-			for exit, room := range state.CurrentRoom.Exits {
-				fmt.Printf("- %s to %s\n", exit, room.Name)
-			}
+			handleRoom(state)
 		case "a":
 		case "atk":
 		case "attack":
@@ -46,24 +34,82 @@ func loop(state internal.State) {
 		case "m":
 		case "move":
 		case "mv":
-			internal.Important("Where do you want to go? ")
-			direction := internal.ProcessInput()
-
-			if _, ok := state.CurrentRoom.Exits[direction]; ok {
-				internal.Success("Moving rooms...")
-				state.MoveRooms(state.Player)
-
-			} else {
-
-				internal.Error("That's not a valid direction.")
-			}
+			handleMove(state)
 		case "quit":
-			internal.Success("Thanks for playing!")
-			os.Exit(0)
+			handleQuit()
 		default:
-			internal.Error("Invalid command. Try again.")
+			handleError()
 		}
 	}
+}
+
+func handleError() {
+	internal.Error("Invalid command. Try again.")
+}
+
+func handleQuit() {
+	internal.Success("Thanks for playing!")
+	os.Exit(0)
+}
+
+func handleDecision(state internal.State) string {
+	internal.Important(state.CurrentRoom.Description)
+
+	if state.CurrentRoom.HasEnemies {
+		internal.Error("This room has enemies!")
+		fmt.Printf("\n%s's Health: %d\n", state.Player.Name, state.Player.Health)
+		fmt.Println("What will you do? (move/attack/room/state)")
+
+	} else {
+		internal.Important("What will you do? (move/room/state)")
+	}
+	return internal.ProcessInput()
+}
+
+func handleMove(state internal.State) {
+	internal.Important("In which direction do you want to go?")
+	showExits(state)
+	direction := internal.ProcessInput()
+
+	if _, ok := state.CurrentRoom.Exits[direction]; ok {
+		moveRoom(state)
+
+	} else {
+
+		internal.Error("That's not a valid direction.")
+	}
+}
+
+func handleRoom(state internal.State) {
+	internal.ClearScreen()
+	internal.Important(state.CurrentRoom.Description)
+	internal.Info("This room has the following exits:")
+	showExits(state)
+}
+
+func handleState(state internal.State) {
+	internal.ClearScreen()
+	internal.Info(state.Player.Name)
+	internal.Info("Cleared Rooms: " + strconv.Itoa(state.ClearedRooms))
+}
+
+func showExits(state internal.State) {
+	internal.Info(("exits:"))
+	for exit, room := range state.CurrentRoom.Exits {
+		fmt.Printf("- %s to %s\n", exit, room.Name)
+	}
+}
+
+func moveRoom(state internal.State) {
+	internal.ClearScreen()
+	internal.Success("Moving")
+	time.Sleep(100 * time.Millisecond)
+	internal.Success(".")
+	time.Sleep(100 * time.Millisecond)
+	internal.Success(".")
+	time.Sleep(100 * time.Millisecond)
+	internal.Success(".")
+	state.MoveRooms(state.Player)
 }
 
 func handleAttack(player internal.Player, enemy internal.Enemy) {
